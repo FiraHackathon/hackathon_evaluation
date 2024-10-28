@@ -15,28 +15,31 @@
 #ifndef HACKATHON_EVALUATION__EVALUATION_HPP_
 #define HACKATHON_EVALUATION__EVALUATION_HPP_
 
-#include <array>
-#include <cstddef>
+#include <gazebo_msgs/msg/contacts_state.hpp>
 #include <memory>
 #include <rclcpp/node.hpp>
-#include <gazebo_msgs/msg/contacts_state.hpp>
 #include <rclcpp/subscription.hpp>
+#include <unordered_map>
+
+#include "hackathon_evaluation/crop_field.hpp"
 
 namespace hackathon
 {
 
 class Evaluation
 {
-  enum Field: std::size_t {
-    mixed = 0,
-    sloping,
-
-    count,  // number of fields
-  };
-
   using ContactsState = gazebo_msgs::msg::ContactsState;
   using ContactSubscription = std::shared_ptr<rclcpp::Subscription<ContactsState>>;
-  using ContactSubscriptions = std::array<ContactSubscription, Field::count>;
+
+  struct FieldInterface
+  {
+    std::string name;
+    CropField data;
+    ContactSubscription sub;
+    bool updated = false;
+  };
+
+  using FieldInterfaces = std::unordered_map<std::string, FieldInterface>;
 
 public:
   explicit Evaluation(const rclcpp::NodeOptions & options);
@@ -44,11 +47,14 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const;
 
 private:
-  void collision_callback_(Field field_id, const Evaluation::ContactsState & msg);
+  void init_field_(const std::string & field_name);
+
+private:
+  void collision_callback_(FieldInterface & field, const ContactsState & msg);
 
 private:
   rclcpp::Node::SharedPtr node_;
-  ContactSubscriptions contact_subscriptions_;
+  FieldInterfaces fields_;
 };
 
 }  // namespace hackathon

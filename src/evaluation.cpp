@@ -15,7 +15,12 @@
 #include "hackathon_evaluation/evaluation.hpp"
 
 #include <memory>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
+#include <stdexcept>
+#include <string>
+
+#include "hackathon_evaluation/crop_field.hpp"
 
 namespace hackathon
 {
@@ -23,21 +28,35 @@ namespace hackathon
 Evaluation::Evaluation(const rclcpp::NodeOptions & options)
 : node_(std::make_shared<rclcpp::Node>("evaluation", options))
 {
+  for (const auto & name : {"mixed_field", "sloping_field"}) {
+    init_field_(name);
+  }
+}
+
+void Evaluation::init_field_(const std::string & field_name)
+{
+  if (fields_.count(field_name))
+    throw std::runtime_error("Failed to load field " + field_name + ": it already exists");
+
   using std::placeholders::_1;
   using CollisionCb = std::function<void(const ContactsState &)>;
+
+  std::string data_file_param_name = field_name + "_data_file";
+  std::string topic_name = "~/" + field_name + "/crop_collisions";
+
+  fields_.insert({field_name, FieldInterface{}});
+  FieldInterface & field = fields_[field_name];
+  field.name = field_name;
+
+  node_->declare_parameter<std::string>(data_file_param_name);
+  auto param = node_->get_parameter(data_file_param_name);
+  field.data.load_csv(param.as_string());
+
+  CollisionCb cb = [this, &field](const ContactsState & msg) {
+    collision_callback_(field, msg);
+  };
   auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
-
-  CollisionCb mixed_cb = [this](const ContactsState & msg) {
-    collision_callback_(Field::mixed, msg);
-  };
-  contact_subscriptions_[Field::mixed] =
-    node_->create_subscription<ContactsState>("~/mixed_field/crop_collisions", qos, mixed_cb);
-
-  CollisionCb sloping_cb = [this](const ContactsState & msg) {
-    collision_callback_(Field::sloping, msg);
-  };
-  contact_subscriptions_[Field::sloping] =
-    node_->create_subscription<ContactsState>("~/sloping_field/crop_collisions", qos, sloping_cb);
+  field.sub = node_->create_subscription<ContactsState>(topic_name, qos, cb);
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_interface() const
@@ -45,8 +64,9 @@ rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_
   return node_->get_node_base_interface();
 }
 
-void Evaluation::collision_callback_(Field field_id, const Evaluation::ContactsState & msg)
+void Evaluation::collision_callback_(FieldInterface & field, const ContactsState & msg)
 {
+  RCLCPP_INFO_STREAM(node_->get_logger(), "Collision received on " << field.name);
 }
 
 }  // namespace hackathon

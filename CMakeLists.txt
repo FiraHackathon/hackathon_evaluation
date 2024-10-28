@@ -18,9 +18,11 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(gazebo_msgs REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 add_library(${PROJECT_NAME} SHARED
   src/evaluation.cpp
+  src/crop_field.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -32,6 +34,10 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
   gazebo_msgs
+)
+
+target_link_libraries(${PROJECT_NAME}
+  Eigen3::Eigen
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}
@@ -46,6 +52,8 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+install(DIRECTORY data DESTINATION share/${PROJECT_NAME})
 
 # if(BUILD_TESTING)
 #   find_package(ament_lint_auto REQUIRED)

@@ -31,13 +31,13 @@ Evaluation::Evaluation(const rclcpp::NodeOptions & options)
     collision_callback_(Field::mixed, msg);
   };
   contact_subscriptions_[Field::mixed] =
-    node_->create_subscription<ContactsState>("mixed_field/crop_collisions", qos, mixed_cb);
+    node_->create_subscription<ContactsState>("~/mixed_field/crop_collisions", qos, mixed_cb);
 
   CollisionCb sloping_cb = [this](const ContactsState & msg) {
     collision_callback_(Field::sloping, msg);
   };
   contact_subscriptions_[Field::sloping] =
-    node_->create_subscription<ContactsState>("sloping_field/crop_collisions", qos, sloping_cb);
+    node_->create_subscription<ContactsState>("~/sloping_field/crop_collisions", qos, sloping_cb);
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_interface() const

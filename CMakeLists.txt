@@ -36,7 +36,7 @@ ament_target_dependencies(${PROJECT_NAME}
 
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "hackathon::Evaluation"
-  EXECUTABLE ${PROJECT_NAME}_node
+  EXECUTABLE evaluation_node
   EXECUTOR "MultiThreadedExecutor"
 )
 

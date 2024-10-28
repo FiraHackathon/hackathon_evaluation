@@ -23,11 +23,30 @@ namespace hackathon
 Evaluation::Evaluation(const rclcpp::NodeOptions & options)
 : node_(std::make_shared<rclcpp::Node>("evaluation", options))
 {
+  using std::placeholders::_1;
+  using CollisionCb = std::function<void(const ContactsState &)>;
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
+
+  CollisionCb mixed_cb = [this](const ContactsState & msg) {
+    collision_callback_(Field::mixed, msg);
+  };
+  contact_subscriptions_[Field::mixed] =
+    node_->create_subscription<ContactsState>("mixed_field/crop_collisions", qos, mixed_cb);
+
+  CollisionCb sloping_cb = [this](const ContactsState & msg) {
+    collision_callback_(Field::sloping, msg);
+  };
+  contact_subscriptions_[Field::sloping] =
+    node_->create_subscription<ContactsState>("sloping_field/crop_collisions", qos, sloping_cb);
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_interface() const
 {
   return node_->get_node_base_interface();
+}
+
+void Evaluation::collision_callback_(Field field_id, const Evaluation::ContactsState & msg)
+{
 }
 
 }  // namespace hackathon

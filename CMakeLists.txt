@@ -17,6 +17,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(gazebo_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/evaluation.cpp
@@ -30,6 +31,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
+  gazebo_msgs
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}

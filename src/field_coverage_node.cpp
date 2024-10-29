@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[])
 {
-  auto node = std::make_shared<romea::FieldCoverage>();
+  auto node = std::make_shared<hackathon::FieldCoverage>();
 
   rclcpp::spin(node);
 

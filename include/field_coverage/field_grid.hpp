@@ -1,5 +1,5 @@
-#ifndef GAZEBO_CLASSIC_TOOLS__FIELD_GRID_HPP_
-#define GAZEBO_CLASSIC_TOOLS__FIELD_GRID_HPP_
+#ifndef HACKATHON_EVALUATION__FIELD_GRID_HPP_
+#define HACKATHON_EVALUATION__FIELD_GRID_HPP_
 
 #include <Eigen/Dense>
 #include <boost/geometry.hpp>
@@ -10,7 +10,7 @@ namespace bg = boost::geometry;
 typedef bg::model::point<double, 2, bg::cs::cartesian> Point;
 typedef bg::model::box<Point>                          Box;
 
-namespace romea
+namespace hackathon
 {
   struct GridCell
   {
@@ -21,18 +21,27 @@ namespace romea
   class FieldGrid
   {
 public:
-    void        checkIntersections();
+    FieldGrid(std::string name, double x, double y, double z,
+              double roll, double pitch, double yaw,
+              double width, double height, double resolution);
+
+    void collisionCallback(Eigen::Vector3d corner1,
+                            Eigen::Vector3d corner2,
+                            Eigen::Vector3d corner3,
+                            Eigen::Vector3d corner4);
+
+    void        checkIntersections(const Box &collision_box);
     double      getIntersectedPercentage() const;
     std::string getName() const;
 
 private:
     std::string           name_;
-    int                   intersected_cells_;
-    float                 resolution;
-    float                 height;
-    float                 width;
+    Eigen::Vector3d       world_pos_;
+    int                   n_rows_, n_cols_;
     std::vector<GridCell> cells_;
+    Eigen::Affine3d       world_to_field_;
+    int                   intersected_cells_;
   };
 } // namespace romea
 
-#endif // GAZEBO_CLASSIC_TOOLS__FIELD_GRID_HPP_
+#endif // HACKATHON_EVALUATION__FIELD_GRID_HPP_

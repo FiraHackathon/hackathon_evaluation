@@ -15,14 +15,46 @@
 #include "hackathon_evaluation/crop_field.hpp"
 
 #include <fstream>
-#include <iostream>
+#include <limits>
 #include <rclcpp/logger.hpp>
 #include <rclcpp/logging.hpp>
-#include <stdexcept>
-#include <string>
 
 namespace hackathon
 {
+
+namespace
+{
+
+using Points = std::vector<Eigen::Vector3d>;
+using ContactPoints = CropField::ContactState::_contact_positions_type;
+
+Points to_eigen_vectors(const ContactPoints & points)
+{
+  Points res;
+  res.reserve(points.size());
+  for (const auto & point : points) {
+    res.emplace_back(point.x, point.y, point.z);
+  }
+  return res;
+}
+
+Crop * get_nearest_crop(const CropField::Neighbors & crops, Eigen::Vector3d point)
+{
+  double current_dist = std::numeric_limits<double>::infinity();
+  Crop * current_crop = nullptr;
+
+  for (const auto & crop : crops) {
+    double dist = (point - crop->pos).squaredNorm();
+    if (dist < current_dist) {
+      current_dist = dist;
+      current_crop = crop;
+    }
+  }
+
+  return current_crop;
+}
+
+}  // namespace
 
 std::size_t CropField::load_csv(const std::string & filename)
 {
@@ -69,6 +101,46 @@ std::size_t CropField::load_csv(const std::string & filename)
   file.close();  // Close the file
 
   return crops_.size();
+}
+
+void CropField::crush_around(const ContactState & state)
+{
+  constexpr double neighbor_radius = 0.5;
+
+  if (state.contact_positions.empty()) {
+    return;
+  }
+
+  // Get nearest crops to avoid iterate all crops for each contact points
+  Points points = to_eigen_vectors(state.contact_positions);
+  auto neighbors = get_neighborhood_(points.front(), neighbor_radius);
+
+  for (const auto & point : points) {
+    Crop * closest_crop = get_nearest_crop(neighbors, point);
+    if(closest_crop != nullptr && !closest_crop->crushed) {
+      closest_crop->crushed = true;
+      ++nb_crushed_;
+    }
+  }
+}
+
+CropField::Neighbors CropField::get_neighborhood_(Eigen::Vector3d pos, double radius)
+{
+  double sq_radius = radius * radius;
+  CropField::Neighbors neighbors;
+
+  for (auto & crop : crops_) {
+    if ((pos - crop.pos).squaredNorm() < sq_radius) {
+      neighbors.push_back(&crop);
+    }
+  }
+
+  return neighbors;
+}
+
+double CropField::get_crushed_ratio() const
+{
+  return static_cast<double>(nb_crushed_) / crops_.size();
 }
 
 }  // namespace hackathon

@@ -66,7 +66,11 @@ rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_
 
 void Evaluation::collision_callback_(FieldInterface & field, const ContactsState & msg)
 {
-  RCLCPP_INFO_STREAM(node_->get_logger(), "Collision received on " << field.name);
+  for(auto const & state : msg.states) {
+    field.data.crush_around(state);
+  }
+
+  RCLCPP_INFO(node_->get_logger(), "Crushed crops: %.2lf%%", field.data.get_crushed_ratio() * 100);
 }
 
 }  // namespace hackathon

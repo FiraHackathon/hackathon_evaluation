@@ -20,6 +20,7 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/subscription.hpp>
 #include <unordered_map>
+#include <Eigen/Geometry>
 
 #include "hackathon_evaluation/crop_field.hpp"
 
@@ -47,7 +48,7 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const;
 
 private:
-  void init_field_(const std::string & field_name);
+  void init_field_(const std::string & field_name, Eigen::Affine3d const & transform);
 
 private:
   void collision_callback_(FieldInterface & field, const ContactsState & msg);

@@ -56,7 +56,7 @@ Crop * get_nearest_crop(const CropField::Neighbors & crops, Eigen::Vector3d poin
 
 }  // namespace
 
-std::size_t CropField::load_csv(const std::string & filename)
+std::size_t CropField::load_csv(const std::string & filename, Eigen::Affine3d const & transform)
 {
   constexpr auto separator = ',';
   std::ifstream file(filename);
@@ -86,7 +86,8 @@ std::size_t CropField::load_csv(const std::string & filename)
     std::getline(ss, z, separator);
 
     try {
-      crops_.emplace_back(Eigen::Vector3d{std::stod(x), std::stod(y), std::stod(z)});
+      Eigen::Vector3d point{std::stod(x), std::stod(y), std::stod(z)};
+      crops_.emplace_back(transform * point);
     } catch (const std::exception &) {
       throw std::runtime_error("malformed number in " + filename + ", line " + std::to_string(i));
     }

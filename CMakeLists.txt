@@ -25,6 +25,7 @@ find_package(TinyXML2 REQUIRED)
 add_library(${PROJECT_NAME} SHARED
   src/evaluation.cpp
   src/crop_field.cpp
+  src/xml_world_parser.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

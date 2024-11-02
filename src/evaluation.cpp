@@ -21,6 +21,7 @@
 #include <string>
 
 #include "hackathon_evaluation/crop_field.hpp"
+#include "hackathon_evaluation/xml_world_parser.hpp"
 
 namespace hackathon
 {
@@ -28,12 +29,21 @@ namespace hackathon
 Evaluation::Evaluation(const rclcpp::NodeOptions & options)
 : node_(std::make_shared<rclcpp::Node>("evaluation", options))
 {
+  // Use world parser to get transform of each model
+  node_->declare_parameter<std::string>("world_file");
+  auto world_file = node_->get_parameter("world_file");
+  XmlWorldParser world_parser{world_file.as_string()};
+
+  // load ROS params and topics for each model
   for (const auto & name : {"mixed_field", "sloping_field"}) {
-    init_field_(name);
+    if (!world_parser.model_exists(name)) {
+      throw std::runtime_error(std::string{"Missing model '"} + name + "' in world file");
+    }
+    init_field_(name, world_parser.get_transform(name));
   }
 }
 
-void Evaluation::init_field_(const std::string & field_name)
+void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine3d & transform)
 {
   if (fields_.count(field_name))
     throw std::runtime_error("Failed to load field " + field_name + ": it already exists");
@@ -48,13 +58,13 @@ void Evaluation::init_field_(const std::string & field_name)
   FieldInterface & field = fields_[field_name];
   field.name = field_name;
 
+  // Open CSV file to load all the crop positions and convert them to world coordinates
   node_->declare_parameter<std::string>(data_file_param_name);
   auto param = node_->get_parameter(data_file_param_name);
-  field.data.load_csv(param.as_string());
+  field.data.load_csv(param.as_string(), transform);
 
-  CollisionCb cb = [this, &field](const ContactsState & msg) {
-    collision_callback_(field, msg);
-  };
+  // Open a subscriber to listen contact events
+  CollisionCb cb = [this, &field](const ContactsState & msg) { collision_callback_(field, msg); };
   auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
   field.sub = node_->create_subscription<ContactsState>(topic_name, qos, cb);
 }
@@ -66,7 +76,7 @@ rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_
 
 void Evaluation::collision_callback_(FieldInterface & field, const ContactsState & msg)
 {
-  for(auto const & state : msg.states) {
+  for (const auto & state : msg.states) {
     field.data.crush_around(state);
   }
 

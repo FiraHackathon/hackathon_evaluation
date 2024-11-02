@@ -16,9 +16,8 @@
 #define HACKATHON_EVALUATION__CROP_FIELD_HPP_
 
 #include <Eigen/Dense>
-#include <functional>
+#include <Eigen/Geometry>
 #include <gazebo_msgs/msg/contact_state.hpp>
-#include <geometry_msgs/msg/detail/point__struct.hpp>
 #include <string>
 #include <vector>
 
@@ -42,7 +41,7 @@ public:
 public:
   /// Create Crops from a CSV file containing position of crop stems
   /// @return the number of loaded crops
-  std::size_t load_csv(const std::string & filename);
+  std::size_t load_csv(const std::string & filename, Eigen::Affine3d const & transform);
 
   /// Crush the crops close to the given contact positions
   void crush_around(const ContactState & state);

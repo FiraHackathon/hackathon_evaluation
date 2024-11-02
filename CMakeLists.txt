@@ -19,6 +19,8 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(tinyxml2_vendor REQUIRED)  # required for find_package(TinyXML2)
+find_package(TinyXML2 REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/evaluation.cpp
@@ -38,6 +40,7 @@ ament_target_dependencies(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   Eigen3::Eigen
+  tinyxml2::tinyxml2
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}

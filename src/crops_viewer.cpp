@@ -23,12 +23,11 @@ namespace hackathon
 namespace
 {
 
-geometry_msgs::msg::Point to_msg(const Eigen::Vector3d & p)
+geometry_msgs::msg::Point ground_projection(const Eigen::Vector3d & p)
 {
   geometry_msgs::msg::Point res;
   res.x = p.x();
   res.y = p.y();
-  res.z = p.z();
   return res;
 }
 
@@ -112,9 +111,9 @@ void CropsViewer::update_field_(Field & field)
 
   for (const auto & crop : field.data->get_crops()) {
     if (crop.crushed) {
-      crushed.points.push_back(to_msg(crop.pos));
+      crushed.points.push_back(ground_projection(crop.pos));
     } else {
-      crops.points.push_back(to_msg(crop.pos));
+      crops.points.push_back(ground_projection(crop.pos));
     }
   }
 }

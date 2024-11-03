@@ -23,6 +23,7 @@
 #include <Eigen/Geometry>
 
 #include "hackathon_evaluation/crop_field.hpp"
+#include "hackathon_evaluation/crops_viewer.hpp"
 
 namespace hackathon
 {
@@ -37,7 +38,6 @@ class Evaluation
     std::string name;
     CropField data;
     ContactSubscription sub;
-    bool updated = false;
   };
 
   using FieldInterfaces = std::unordered_map<std::string, FieldInterface>;
@@ -56,6 +56,7 @@ private:
 private:
   rclcpp::Node::SharedPtr node_;
   FieldInterfaces fields_;
+  CropsViewer crops_viewer_;
 };
 
 }  // namespace hackathon

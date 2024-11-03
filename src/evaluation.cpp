@@ -21,13 +21,14 @@
 #include <string>
 
 #include "hackathon_evaluation/crop_field.hpp"
+#include "hackathon_evaluation/crops_viewer.hpp"
 #include "hackathon_evaluation/xml_world_parser.hpp"
 
 namespace hackathon
 {
 
 Evaluation::Evaluation(const rclcpp::NodeOptions & options)
-: node_(std::make_shared<rclcpp::Node>("evaluation", options))
+: node_(std::make_shared<rclcpp::Node>("evaluation", options)), crops_viewer_(*node_)
 {
   // Use world parser to get transform of each model
   node_->declare_parameter<std::string>("world_file");
@@ -67,6 +68,8 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
   CollisionCb cb = [this, &field](const ContactsState & msg) { collision_callback_(field, msg); };
   auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
   field.sub = node_->create_subscription<ContactsState>(topic_name, qos, cb);
+
+  crops_viewer_.add_field(field_name, field.data);
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_interface() const
@@ -77,10 +80,12 @@ rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_
 void Evaluation::collision_callback_(FieldInterface & field, const ContactsState & msg)
 {
   for (const auto & state : msg.states) {
-    field.data.crush_around(state);
+    if (field.data.crush_around(state)) {
+      crops_viewer_.notify_change(field.name);
+      RCLCPP_INFO(
+        node_->get_logger(), "Crushed crops: %.2lf%%", field.data.get_crushed_ratio() * 100);
+    }
   }
-
-  RCLCPP_INFO(node_->get_logger(), "Crushed crops: %.2lf%%", field.data.get_crushed_ratio() * 100);
 }
 
 }  // namespace hackathon

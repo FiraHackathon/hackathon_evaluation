@@ -21,11 +21,13 @@ find_package(gazebo_msgs REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(tinyxml2_vendor REQUIRED)  # required for find_package(TinyXML2)
 find_package(TinyXML2 REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
   src/evaluation.cpp
   src/crop_field.cpp
   src/xml_world_parser.cpp
+  src/crops_viewer.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -37,6 +39,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
   gazebo_msgs
+  visualization_msgs
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -47,7 +50,7 @@ target_link_libraries(${PROJECT_NAME}
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "hackathon::Evaluation"
   EXECUTABLE evaluation_node
-  EXECUTOR "MultiThreadedExecutor"
+  EXECUTOR "SingleThreadedExecutor"
 )
 
 install(TARGETS

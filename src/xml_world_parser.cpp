@@ -74,9 +74,6 @@ void XmlWorldParser::load_include_element_(tinyxml2::XMLElement * include_elemen
   std::string name = include_element->FirstChildElement("name")->GetText();
   std::string pose_text = include_element->FirstChildElement("pose")->GetText();
   auto tf = read_pose(pose_text);
-
-  std::cerr << "name: " << name << ", tf:\n" << tf.matrix() << std::endl;
-
   transforms_.insert({std::move(name), tf});
 }
 

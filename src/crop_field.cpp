@@ -104,25 +104,29 @@ std::size_t CropField::load_csv(const std::string & filename, Eigen::Affine3d co
   return crops_.size();
 }
 
-void CropField::crush_around(const ContactState & state)
+bool CropField::crush_around(const ContactState & state)
 {
   constexpr double neighbor_radius = 0.5;
 
   if (state.contact_positions.empty()) {
-    return;
+    return false;
   }
 
   // Get nearest crops to avoid iterate all crops for each contact points
   Points points = to_eigen_vectors(state.contact_positions);
   auto neighbors = get_neighborhood_(points.front(), neighbor_radius);
+  bool crushed = false;
 
   for (const auto & point : points) {
     Crop * closest_crop = get_nearest_crop(neighbors, point);
     if(closest_crop != nullptr && !closest_crop->crushed) {
       closest_crop->crushed = true;
       ++nb_crushed_;
+      crushed = true;
     }
   }
+
+  return crushed;
 }
 
 CropField::Neighbors CropField::get_neighborhood_(Eigen::Vector3d pos, double radius)

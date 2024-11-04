@@ -64,7 +64,6 @@ void CropsViewer::timer_callback_()
   for (auto & [name, field] : fields_) {
     if (field.changed) {
       update_field_(field);
-      markers_pub_->publish(field.markers);
     }
   }
 }
@@ -117,6 +116,8 @@ void CropsViewer::update_field_(Field & field)
       crops.points.push_back(ground_projection(crop.pos));
     }
   }
+
+  markers_pub_->publish(field.markers);
 }
 
 }  // namespace hackathon

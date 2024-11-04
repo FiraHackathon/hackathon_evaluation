@@ -24,6 +24,7 @@
 
 #include "hackathon_evaluation/crop_field.hpp"
 #include "hackathon_evaluation/crops_viewer.hpp"
+#include "hackathon_evaluation/info_viewer.hpp"
 
 namespace hackathon
 {
@@ -57,6 +58,7 @@ private:
   rclcpp::Node::SharedPtr node_;
   FieldInterfaces fields_;
   CropsViewer crops_viewer_;
+  InfoViewer info_viewer_;
 };
 
 }  // namespace hackathon

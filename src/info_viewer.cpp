@@ -14,10 +14,62 @@
 
 #include "hackathon_evaluation/info_viewer.hpp"
 
+#include <functional>
+#include <iomanip>
+#include <memory>
+#include <rclcpp/qos.hpp>
+#include <sstream>
+
 namespace hackathon
 {
 
+InfoViewer::InfoViewer(rclcpp::Node & node)
+{
+  text_pub_ = node.create_publisher<OverlayText>("~/info_overlay", rclcpp::QoS{1});
 
+  using namespace std::chrono_literals;
+  timer_ = node.create_wall_timer(200ms, std::bind(&InfoViewer::timer_callback_, this));
+
+  msg_.width = 400;
+  msg_.height = 120;
+  msg_.vertical_alignment = OverlayText::TOP;
+  msg_.horizontal_alignment = OverlayText::LEFT;
+  msg_.vertical_distance = 10;
+  msg_.horizontal_distance = 10;
+  msg_.line_width = 200;
+  // msg_.bg_color.r = 1.0;
+  // msg_.bg_color.g = 1.0;
+  // msg_.bg_color.b = 1.0;
+  msg_.bg_color.a = 0.05;
+  msg_.fg_color.r = 0.0;
+  msg_.fg_color.g = 0.639;
+  msg_.fg_color.b = 0.651;
+  msg_.fg_color.a = 1.0;
+  msg_.font = "DejaVu Sans Mono";
+  msg_.text_size = 16;
+}
+
+void InfoViewer::set_covered_percentage(const std::string & field_name, double value)
+{
+  fields_[field_name].covered_percentage = value;
+}
+
+void InfoViewer::set_crushed_percentage(const std::string & field_name, double value)
+{
+  fields_[field_name].crushed_percentage = value;
+}
+
+void InfoViewer::timer_callback_()
+{
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(2);
+  for (auto const & [name, field] : fields_) {
+    oss << name << ", covered: " << field.covered_percentage << " %\n";
+    oss << name << ", crushed: " << field.crushed_percentage << " %\n";
+  }
+  msg_.text = oss.str();
+
+  text_pub_->publish(msg_);
+}
 
 }  // namespace hackathon
-

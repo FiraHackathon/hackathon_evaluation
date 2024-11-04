@@ -22,13 +22,16 @@
 
 #include "hackathon_evaluation/crop_field.hpp"
 #include "hackathon_evaluation/crops_viewer.hpp"
+#include "hackathon_evaluation/info_viewer.hpp"
 #include "hackathon_evaluation/xml_world_parser.hpp"
 
 namespace hackathon
 {
 
 Evaluation::Evaluation(const rclcpp::NodeOptions & options)
-: node_(std::make_shared<rclcpp::Node>("evaluation", options)), crops_viewer_(*node_)
+: node_(std::make_shared<rclcpp::Node>("evaluation", options)),
+  crops_viewer_(*node_),
+  info_viewer_(*node_)
 {
   // Use world parser to get transform of each model
   node_->declare_parameter<std::string>("world_file");
@@ -82,8 +85,7 @@ void Evaluation::collision_callback_(FieldInterface & field, const ContactsState
   for (const auto & state : msg.states) {
     if (field.data.crush_around(state)) {
       crops_viewer_.notify_change(field.name);
-      RCLCPP_INFO(
-        node_->get_logger(), "Crushed crops: %.2lf%%", field.data.get_crushed_ratio() * 100);
+      info_viewer_.set_crushed_percentage(field.name, field.data.get_crushed_ratio() * 100);
     }
   }
 }

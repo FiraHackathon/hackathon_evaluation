@@ -17,7 +17,6 @@
 
 #include <rclcpp/node.hpp>
 #include <rclcpp/publisher.hpp>
-
 #include <rclcpp/timer.hpp>
 #include <rviz_2d_overlay_msgs/msg/overlay_text.hpp>
 #include <unordered_map>
@@ -30,7 +29,8 @@ class InfoViewer
 public:
   using OverlayText = rviz_2d_overlay_msgs::msg::OverlayText;
 
-  struct FieldData {
+  struct FieldData
+  {
     double crushed_percentage = 0;
     double covered_percentage = 0;
   };
@@ -40,21 +40,20 @@ public:
 public:
   InfoViewer(rclcpp::Node & node);
 
-  void set_covered_percentage(std::string field_name, double value);
-  void set_crushed_percentage(std::string field_name, double value);
+  void set_covered_percentage(const std::string & field_name, double value);
+  void set_crushed_percentage(const std::string & field_name, double value);
 
 private:
   void timer_callback_();
 
 private:
   Fields fields_;
+  OverlayText msg_;
 
   std::shared_ptr<rclcpp::Publisher<OverlayText>> text_pub_;
   std::shared_ptr<rclcpp::TimerBase> timer_;
-  std::string text_;
 };
 
 }  // namespace hackathon
 
 #endif
-

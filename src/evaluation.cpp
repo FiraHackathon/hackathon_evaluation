@@ -64,7 +64,7 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
   auto param = node_->get_parameter(data_file_param_name);
   field.data.load_csv(param.as_string(), transform);
 
-  // Open a subscriber to listen contact events
+  // Create a subscriber to listen contact events
   CollisionCb cb = [this, &field](const ContactsState & msg) { collision_callback_(field, msg); };
   auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
   field.sub = node_->create_subscription<ContactsState>(topic_name, qos, cb);

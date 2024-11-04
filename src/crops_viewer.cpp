@@ -103,8 +103,9 @@ void CropsViewer::update_field_(Field & field)
   auto & crops = field.markers.markers.front();
   auto & crushed = field.markers.markers[1];
 
-  crops.header.stamp = node_.now();
-  crushed.header.stamp = node_.now();
+  // Disabled to ignore time in rviz
+  // crops.header.stamp = node_.now();
+  // crushed.header.stamp = node_.now();
 
   crops.points.clear();
   crushed.points.clear();

@@ -14,6 +14,7 @@
   <depend>gazebo_msgs</depend>
   <depend>tinyxml2_vendor</depend>
   <depend>visualization_msgs</depend>
+  <depend>rviz_2d_overlay_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

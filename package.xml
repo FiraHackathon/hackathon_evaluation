@@ -11,7 +11,10 @@
 
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>tf2_ros</depend>
   <depend>gazebo_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>tinyxml2_vendor</depend>
   <depend>visualization_msgs</depend>
   <depend>rviz_2d_overlay_msgs</depend>

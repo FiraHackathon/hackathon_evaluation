@@ -18,6 +18,9 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(gazebo_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(tinyxml2_vendor REQUIRED)  # required for find_package(TinyXML2)
 find_package(TinyXML2 REQUIRED)
@@ -32,7 +35,18 @@ add_library(${PROJECT_NAME} SHARED
   src/info_viewer.cpp
 )
 
+add_executable(field_coverage_node
+  src/field_coverage_node.cpp
+  src/field_coverage.cpp
+  src/field_grid.cpp
+)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(field_coverage_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
@@ -45,9 +59,21 @@ ament_target_dependencies(${PROJECT_NAME}
   rviz_2d_overlay_msgs
 )
 
+ament_target_dependencies(field_coverage_node
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  std_msgs
+  tf2_ros
+)
+
 target_link_libraries(${PROJECT_NAME}
   Eigen3::Eigen
   tinyxml2::tinyxml2
+)
+
+target_link_libraries(field_coverage_node
+  Eigen3::Eigen
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}
@@ -63,7 +89,11 @@ install(TARGETS
   RUNTIME DESTINATION bin
 )
 
-install(DIRECTORY data DESTINATION share/${PROJECT_NAME})
+install(TARGETS field_coverage_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY data config DESTINATION share/${PROJECT_NAME})
 
 # if(BUILD_TESTING)
 #   find_package(ament_lint_auto REQUIRED)

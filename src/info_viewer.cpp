@@ -49,6 +49,11 @@ InfoViewer::InfoViewer(rclcpp::Node & node)
   msg_.text_size = 16;
 }
 
+void InfoViewer::add_field(const std::string & field_name)
+{
+  fields_.insert({field_name, FieldData{}});
+}
+
 void InfoViewer::set_covered_percentage(const std::string & field_name, double value)
 {
   fields_[field_name].covered_percentage = value;

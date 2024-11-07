@@ -40,6 +40,7 @@ public:
 public:
   InfoViewer(rclcpp::Node & node);
 
+  void add_field(const std::string & field_name);
   void set_covered_percentage(const std::string & field_name, double value);
   void set_crushed_percentage(const std::string & field_name, double value);
 

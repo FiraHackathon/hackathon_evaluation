@@ -73,6 +73,7 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
   field.sub = node_->create_subscription<ContactsState>(topic_name, qos, cb);
 
   crops_viewer_.add_field(field_name, field.data);
+  info_viewer_.set_covered_percentage(field_name, 0);  // To create the field in the viewer
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_interface() const

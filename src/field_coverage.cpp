@@ -4,11 +4,14 @@ namespace hackathon
 {
   FieldCoverage::FieldCoverage(const rclcpp::NodeOptions &options) : Node("field_coverage_node", options)
   {
-    tool_length_ = this->get_parameter("tool_length").as_double();
-    tool_width_  = this->get_parameter("tool_width").as_double();
-    tool_joint_  = this->get_parameter("tool_joint").as_string();
-    tool_frame_  = this->get_parameter("tool_frame").as_string();
-    world_frame_ = this->get_parameter("world_frame").as_string();
+    tool_length_          = this->get_parameter("tool_length").as_double();
+    tool_width_           = this->get_parameter("tool_width").as_double();
+    tool_joint_           = this->get_parameter("tool_joint").as_string();
+    tool_frame_           = this->get_parameter("tool_frame").as_string();
+    tool_center_offset_x_ = this->get_parameter("tool_center_offset.x").as_double();
+    tool_center_offset_y_ = this->get_parameter("tool_center_offset.y").as_double();
+    tool_frame_           = this->get_parameter("tool_frame").as_string();
+    world_frame_          = this->get_parameter("world_frame").as_string();
     std::string              joint_state_topic = this->get_parameter("joint_state_topic").as_string();
     std::vector<std::string> fields_names = this->get_parameter("field_names").as_string_array();
 
@@ -104,20 +107,20 @@ namespace hackathon
     tool_to_world.translation() = Eigen::Vector3d({position.x, position.y, position.z});
     tool_to_world.linear() = Eigen::Quaternion<double>(orientation.w, orientation.x, orientation.y, orientation.z).toRotationMatrix();
 
-    up_right = tool_to_world * Eigen::Vector3d{tool_length_ / 2,
-                                              tool_width_ / 2,
+    up_right = tool_to_world * Eigen::Vector3d{tool_length_ / 2 + tool_center_offset_x_,
+                                              tool_width_ / 2 + tool_center_offset_y_,
                                               0};
 
-    up_left = tool_to_world * Eigen::Vector3d{tool_length_ / 2,
-                                              -tool_width_ / 2,
+    up_left = tool_to_world * Eigen::Vector3d{tool_length_ / 2 + tool_center_offset_x_,
+                                              -tool_width_ / 2 + tool_center_offset_y_,
                                               0};
 
-    bottom_left = tool_to_world * Eigen::Vector3d{-tool_length_ / 2,
-                                                  -tool_width_ / 2,
+    bottom_left = tool_to_world * Eigen::Vector3d{-tool_length_ / 2 + tool_center_offset_x_,
+                                                  -tool_width_ / 2 + tool_center_offset_y_,
                                                   0};
 
-    bottom_right = tool_to_world * Eigen::Vector3d{-tool_length_ / 2,
-                                                    tool_width_ / 2,
+    bottom_right = tool_to_world * Eigen::Vector3d{-tool_length_ / 2 + tool_center_offset_x_,
+                                                    tool_width_ / 2 + tool_center_offset_y_,
                                                     0};
   }
 }

@@ -34,6 +34,8 @@ namespace hackathon
     std::string            tool_frame_;
     double                 tool_length_;
     double                 tool_width_;
+    double                 tool_center_offset_x_;
+    double                 tool_center_offset_y_;
   };
 } // namespace hackathon
 

@@ -1,7 +1,10 @@
 /field_coverage_node:
   ros__parameters:
-    tool_length: 1.0
-    tool_width: 5.0
+    tool_length: 0.4
+    tool_width: 3.0
+    tool_center_offset:
+      x: -0.4
+      y: 0.0
     tool_joint: robot_implement_hitch_joint
     tool_frame: robot_implement_link
     world_frame: map
@@ -13,8 +16,8 @@
 
     fields:
       mixed_field:
-        width: 15.0
-        height: 30.0
+        width: 30.0
+        height: 9.0
         resolution: 0.2
         position:
           x: 124.242325
@@ -25,14 +28,14 @@
           p: -0.005
           y: -2.79589
       sloping_field:  
-        width: 5.0
-        height: 20.0
+        width: 2.5
+        height: 50.0
         resolution: 0.2
         position:
-          x: 0.0
-          y: 0.0
-          z: 0.0
+          x: 35.48
+          y: 213.68
+          z: 3.25
         rotation:
-          r: 0.0 
-          p: 0.0 
-          y: 0.0 
+          r: 0.01548
+          p: -0.3492
+          y: 2.0067

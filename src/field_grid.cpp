@@ -6,9 +6,9 @@ namespace hackathon
   FieldGrid::FieldGrid(std::string name, double x, double y, double z,
                        double roll, double pitch, double yaw,
                        double width, double height, double resolution) :
-                        
-  name_(name),
-  intersected_cells_(0)
+
+                                                                         name_(name),
+                                                                         intersected_cells_(0)
   {
     world_pos_ = Eigen::Vector3d(x, y, z);
 
@@ -74,7 +74,7 @@ namespace hackathon
 
   double FieldGrid::getIntersectedPercentage() const
   {
-    return ((float)intersected_cells_ / (n_rows_ * n_cols_));
+    return ((double)intersected_cells_ / (n_rows_ * n_cols_));
   }
 
   std::string FieldGrid::getName() const

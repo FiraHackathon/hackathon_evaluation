@@ -16,6 +16,7 @@
 #define HACKATHON_EVALUATION__EVALUATION_HPP_
 
 #include <gazebo_msgs/msg/contacts_state.hpp>
+#include <std_msgs/msg/float32.hpp>
 #include <memory>
 #include <rclcpp/node.hpp>
 #include <rclcpp/subscription.hpp>
@@ -33,12 +34,15 @@ class Evaluation
 {
   using ContactsState = gazebo_msgs::msg::ContactsState;
   using ContactSubscription = std::shared_ptr<rclcpp::Subscription<ContactsState>>;
+  using Float32Msg = std_msgs::msg::Float32;
+  using Float32Subscription = std::shared_ptr<rclcpp::Subscription<Float32Msg>>;
 
   struct FieldInterface
   {
     std::string name;
     CropField data;
-    ContactSubscription sub;
+    ContactSubscription collision_sub;
+    Float32Subscription coverage_sub;
   };
 
   using FieldInterfaces = std::unordered_map<std::string, FieldInterface>;
@@ -53,6 +57,7 @@ private:
 
 private:
   void collision_callback_(FieldInterface & field, const ContactsState & msg);
+  void coverage_callback_(FieldInterface & field, const Float32Msg & msg);
 
 private:
   rclcpp::Node::SharedPtr node_;

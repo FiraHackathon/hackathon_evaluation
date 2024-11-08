@@ -55,6 +55,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components
   gazebo_msgs
+  std_msgs
   visualization_msgs
   rviz_2d_overlay_msgs
 )

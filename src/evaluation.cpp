@@ -54,9 +54,11 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
 
   using std::placeholders::_1;
   using CollisionCb = std::function<void(const ContactsState &)>;
+  using CoverageCb = std::function<void(const Float32Msg &)>;
 
   std::string data_file_param_name = field_name + "_data_file";
-  std::string topic_name = "~/" + field_name + "/crop_collisions";
+  std::string collision_topic_name = "~/" + field_name + "/crop_collisions";
+  std::string coverage_topic_name = "~/" + field_name + "/coverage";
 
   fields_.insert({field_name, FieldInterface{}});
   FieldInterface & field = fields_[field_name];
@@ -70,7 +72,12 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
   // Create a subscriber to listen contact events
   CollisionCb cb = [this, &field](const ContactsState & msg) { collision_callback_(field, msg); };
   auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
-  field.sub = node_->create_subscription<ContactsState>(topic_name, qos, cb);
+  field.collision_sub = node_->create_subscription<ContactsState>(collision_topic_name, qos, cb);
+
+  // Create a subscriber to listen to coverage
+  CoverageCb coverage_cb = [this, &field](const Float32Msg & msg) { coverage_callback_(field, msg); };
+  // auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
+  field.coverage_sub = node_->create_subscription<Float32Msg>(coverage_topic_name, qos, coverage_cb);
 
   crops_viewer_.add_field(field_name, field.data);
   info_viewer_.set_covered_percentage(field_name, 0);  // To create the field in the viewer
@@ -79,6 +86,11 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Evaluation::get_node_base_interface() const
 {
   return node_->get_node_base_interface();
+}
+
+void Evaluation::coverage_callback_(FieldInterface & field, const Float32Msg & msg)
+{
+  info_viewer_.set_covered_percentage(field.name, msg.data * 100);
 }
 
 void Evaluation::collision_callback_(FieldInterface & field, const ContactsState & msg)

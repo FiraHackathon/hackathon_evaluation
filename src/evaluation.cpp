@@ -59,6 +59,7 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
   std::string data_file_param_name = field_name + "_data_file";
   std::string collision_topic_name = field_name + "/crop_collisions";
   std::string coverage_topic_name = field_name + "/coverage";
+  std::string crushed_topic_name = field_name + "/crushed";
 
   fields_.insert({field_name, FieldInterface{}});
   FieldInterface & field = fields_[field_name];
@@ -76,8 +77,9 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
 
   // Create a subscriber to listen to coverage
   CoverageCb coverage_cb = [this, &field](const Float32Msg & msg) { coverage_callback_(field, msg); };
-  // auto qos = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability_volatile();
   field.coverage_sub = node_->create_subscription<Float32Msg>(coverage_topic_name, qos, coverage_cb);
+
+  field.crushed_pub = node_->create_publisher<Float32Msg>(crushed_topic_name, qos);
 
   crops_viewer_.add_field(field_name, field.data);
   info_viewer_.set_covered_percentage(field_name, 0);  // To create the field in the viewer
@@ -98,7 +100,13 @@ void Evaluation::collision_callback_(FieldInterface & field, const ContactsState
   for (const auto & state : msg.states) {
     if (field.data.crush_around(state)) {
       crops_viewer_.notify_change(field.name);
-      info_viewer_.set_crushed_percentage(field.name, field.data.get_crushed_ratio() * 100);
+
+      auto crushed_percentage = field.data.get_crushed_ratio() * 100;
+      info_viewer_.set_crushed_percentage(field.name, crushed_percentage);
+
+      Float32Msg msg;
+      msg.data = crushed_percentage;
+      field.crushed_pub->publish(std::move(msg));
     }
   }
 }

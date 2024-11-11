@@ -15,13 +15,14 @@
 #ifndef HACKATHON_EVALUATION__EVALUATION_HPP_
 #define HACKATHON_EVALUATION__EVALUATION_HPP_
 
+#include <Eigen/Geometry>
 #include <gazebo_msgs/msg/contacts_state.hpp>
-#include <std_msgs/msg/float32.hpp>
 #include <memory>
 #include <rclcpp/node.hpp>
+#include <rclcpp/publisher.hpp>
 #include <rclcpp/subscription.hpp>
+#include <std_msgs/msg/float32.hpp>
 #include <unordered_map>
-#include <Eigen/Geometry>
 
 #include "hackathon_evaluation/crop_field.hpp"
 #include "hackathon_evaluation/crops_viewer.hpp"
@@ -36,6 +37,7 @@ class Evaluation
   using ContactSubscription = std::shared_ptr<rclcpp::Subscription<ContactsState>>;
   using Float32Msg = std_msgs::msg::Float32;
   using Float32Subscription = std::shared_ptr<rclcpp::Subscription<Float32Msg>>;
+  using Float32Publisher = std::shared_ptr<rclcpp::Publisher<Float32Msg>>;
 
   struct FieldInterface
   {
@@ -43,6 +45,7 @@ class Evaluation
     CropField data;
     ContactSubscription collision_sub;
     Float32Subscription coverage_sub;
+    Float32Publisher crushed_pub;
   };
 
   using FieldInterfaces = std::unordered_map<std::string, FieldInterface>;
@@ -53,7 +56,7 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface() const;
 
 private:
-  void init_field_(const std::string & field_name, Eigen::Affine3d const & transform);
+  void init_field_(const std::string & field_name, const Eigen::Affine3d & transform);
 
 private:
   void collision_callback_(FieldInterface & field, const ContactsState & msg);

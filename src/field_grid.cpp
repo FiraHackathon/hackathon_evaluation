@@ -74,7 +74,7 @@ namespace hackathon
 
   double FieldGrid::getIntersectedPercentage() const
   {
-    return ((double)intersected_cells_ / (n_rows_ * n_cols_));
+    return (100.0 * intersected_cells_ / (n_rows_ * n_cols_));
   }
 
   std::string FieldGrid::getName() const

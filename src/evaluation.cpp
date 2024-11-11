@@ -57,8 +57,8 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
   using CoverageCb = std::function<void(const Float32Msg &)>;
 
   std::string data_file_param_name = field_name + "_data_file";
-  std::string collision_topic_name = "~/" + field_name + "/crop_collisions";
-  std::string coverage_topic_name = "~/" + field_name + "/coverage";
+  std::string collision_topic_name = field_name + "/crop_collisions";
+  std::string coverage_topic_name = field_name + "/coverage";
 
   fields_.insert({field_name, FieldInterface{}});
   FieldInterface & field = fields_[field_name];

@@ -32,7 +32,7 @@ namespace hackathon
       fields_.push_back(FieldGrid(field_name, x, y, z, roll, pitch, yaw, width, height, resolution));
 
       rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr field_pub =
-          this->create_publisher<std_msgs::msg::Float32>("/evaluation/" + field_name + "/coverage", 10);
+          this->create_publisher<std_msgs::msg::Float32>(field_name + "/coverage", 10);
       coverage_pubs_.push_back(field_pub);
     }
 

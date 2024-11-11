@@ -1,4 +1,4 @@
-/field_coverage_node:
+/**:
   ros__parameters:
     tool_length: 0.4
     tool_width: 3.0

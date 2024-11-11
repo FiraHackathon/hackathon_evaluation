@@ -1,4 +1,5 @@
 #include "field_coverage/field_coverage.hpp"
+#include <rclcpp/logging.hpp>
 
 namespace hackathon
 {
@@ -58,10 +59,17 @@ namespace hackathon
 
     if (tool_pos > 0.7)
     {
-      geometry_msgs::msg::TransformStamped tool_map_tf = tf_buffer_->lookupTransform(
-          world_frame_,
-          tool_frame_,
-          tf2::TimePointZero);
+      geometry_msgs::msg::TransformStamped tool_map_tf;
+      try {
+        tool_map_tf = tf_buffer_->lookupTransform(
+            world_frame_,
+            tool_frame_,
+            tf2::TimePointZero);
+      }
+      catch(std::exception const & e) {
+        RCLCPP_WARN_STREAM(get_logger(), "Failed to get implement tf: " << e.what());
+        return;
+      }
 
       // Get closest field
       FieldGrid      *field;

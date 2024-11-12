@@ -51,6 +51,9 @@ target_include_directories(field_coverage_node PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
+# Remove annoying warning of boost
+target_compile_definitions(field_coverage_node PRIVATE -DBOOST_ALLOW_DEPRECATED_HEADERS)
+
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_components

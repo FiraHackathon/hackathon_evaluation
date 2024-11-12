@@ -1,4 +1,5 @@
 #include "field_coverage/field_coverage.hpp"
+#include <Eigen/Core>
 #include <rclcpp/logging.hpp>
 
 namespace hackathon
@@ -15,6 +16,7 @@ namespace hackathon
     world_frame_          = this->get_parameter("world_frame").as_string();
     std::string              joint_state_topic = this->get_parameter("joint_state_topic").as_string();
     std::vector<std::string> fields_names = this->get_parameter("field_names").as_string_array();
+    std::string              pose_topic = get_parameter("implement_pose_topic").as_string();
 
     for (const auto &field_name : fields_names)
     {
@@ -37,12 +39,14 @@ namespace hackathon
       coverage_pubs_.push_back(field_pub);
     }
 
-    tf_buffer_       = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-    tf_listener_     = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+    using std::placeholders::_1;
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
                         joint_state_topic,
                         10,
-                        std::bind(&FieldCoverage::jointStateCallback, this, std::placeholders::_1));
+                        std::bind(&FieldCoverage::jointStateCallback, this, _1));
+
+    pose_sub_ = create_subscription<PoseMsg>(
+      pose_topic, 1, std::bind(&FieldCoverage::implementCallback_, this, _1));
 
     RCLCPP_INFO(this->get_logger(), "Initialization complete");
   }
@@ -59,25 +63,10 @@ namespace hackathon
 
     if (tool_pos > 0.7)
     {
-      geometry_msgs::msg::TransformStamped tool_map_tf;
-      try {
-        tool_map_tf = tf_buffer_->lookupTransform(
-            world_frame_,
-            tool_frame_,
-            tf2::TimePointZero);
-      }
-      catch(std::exception const & e) {
-        RCLCPP_WARN_STREAM(get_logger(), "Failed to get implement tf: " << e.what());
-        return;
-      }
-
       // Get closest field
       FieldGrid      *field;
       float           min_dist = FLT_MAX;
-      Eigen::Vector3d tool_pos{tool_map_tf.transform.translation.x,
-                               tool_map_tf.transform.translation.y,
-                               tool_map_tf.transform.translation.z};
-
+      Eigen::Vector3d tool_pos = tool_to_world_.translation();
       for (auto &f : fields_)
       {
         double dist = (tool_pos - f.getWordlPos()).norm();
@@ -89,8 +78,7 @@ namespace hackathon
       }
 
       Eigen::Vector3d up_right, up_left, bottom_left, bottom_right;
-      getToolCorners(tool_map_tf, up_right, up_left, bottom_left, bottom_right);
-
+      getToolCorners(up_right, up_left, bottom_left, bottom_right);
       field->collisionCallback(up_left, up_right, bottom_left, bottom_right);
     }
 
@@ -102,33 +90,33 @@ namespace hackathon
     }
   }
 
-  void FieldCoverage::getToolCorners(const geometry_msgs::msg::TransformStamped &transform,
-                                     Eigen::Vector3d &up_right,
+  void FieldCoverage::getToolCorners( Eigen::Vector3d &up_right,
                                      Eigen::Vector3d &up_left,
                                      Eigen::Vector3d &bottom_left,
                                      Eigen::Vector3d &bottom_right) const
   {
-    geometry_msgs::msg::Vector3    position = transform.transform.translation;
-    geometry_msgs::msg::Quaternion orientation = transform.transform.rotation;
-
-    Eigen::Affine3d tool_to_world;
-    tool_to_world.translation() = Eigen::Vector3d({position.x, position.y, position.z});
-    tool_to_world.linear() = Eigen::Quaternion<double>(orientation.w, orientation.x, orientation.y, orientation.z).toRotationMatrix();
-
-    up_right = tool_to_world * Eigen::Vector3d{tool_length_ / 2 + tool_center_offset_x_,
+    up_right = tool_to_world_ * Eigen::Vector3d{tool_length_ / 2 + tool_center_offset_x_,
                                               tool_width_ / 2 + tool_center_offset_y_,
                                               0};
 
-    up_left = tool_to_world * Eigen::Vector3d{tool_length_ / 2 + tool_center_offset_x_,
+    up_left = tool_to_world_ * Eigen::Vector3d{tool_length_ / 2 + tool_center_offset_x_,
                                               -tool_width_ / 2 + tool_center_offset_y_,
                                               0};
 
-    bottom_left = tool_to_world * Eigen::Vector3d{-tool_length_ / 2 + tool_center_offset_x_,
+    bottom_left = tool_to_world_ * Eigen::Vector3d{-tool_length_ / 2 + tool_center_offset_x_,
                                                   -tool_width_ / 2 + tool_center_offset_y_,
                                                   0};
 
-    bottom_right = tool_to_world * Eigen::Vector3d{-tool_length_ / 2 + tool_center_offset_x_,
+    bottom_right = tool_to_world_ * Eigen::Vector3d{-tool_length_ / 2 + tool_center_offset_x_,
                                                     tool_width_ / 2 + tool_center_offset_y_,
                                                     0};
   }
-}
+
+  void FieldCoverage::implementCallback_(const PoseMsg & msg)
+  {
+    const auto & pos = msg.pose.position;
+    const auto & q = msg.pose.orientation;
+    tool_to_world_.translation() = Eigen::Vector3d{pos.x, pos.y, pos.z};
+    tool_to_world_.linear() = Eigen::Quaterniond{q.w, q.x, q.y, q.z}.toRotationMatrix();
+  }
+}  // namespace hackathon

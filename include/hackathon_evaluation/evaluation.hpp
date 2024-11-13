@@ -24,6 +24,7 @@
 #include <std_msgs/msg/float32.hpp>
 #include <unordered_map>
 
+#include "hackathon_evaluation/collision_counter.hpp"
 #include "hackathon_evaluation/crop_field.hpp"
 #include "hackathon_evaluation/crops_viewer.hpp"
 #include "hackathon_evaluation/info_viewer.hpp"
@@ -67,6 +68,7 @@ private:
   FieldInterfaces fields_;
   CropsViewer crops_viewer_;
   InfoViewer info_viewer_;
+  CollisionCounter collision_counter_;
 };
 
 }  // namespace hackathon

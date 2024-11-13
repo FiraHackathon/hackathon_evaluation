@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "hackathon_evaluation/collision_counter.hpp"
 #include "hackathon_evaluation/crop_field.hpp"
 #include "hackathon_evaluation/crops_viewer.hpp"
 #include "hackathon_evaluation/info_viewer.hpp"
@@ -31,7 +32,8 @@ namespace hackathon
 Evaluation::Evaluation(const rclcpp::NodeOptions & options)
 : node_(std::make_shared<rclcpp::Node>("evaluation", options)),
   crops_viewer_(*node_),
-  info_viewer_(*node_)
+  info_viewer_(*node_),
+  collision_counter_(node_)
 {
   // Use world parser to get transform of each model
   node_->declare_parameter<std::string>("world_file");

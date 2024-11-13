@@ -33,6 +33,7 @@ add_library(${PROJECT_NAME} SHARED
   src/xml_world_parser.cpp
   src/crops_viewer.cpp
   src/info_viewer.cpp
+  src/collision_counter.cpp
 )
 
 add_executable(field_coverage_node

@@ -26,7 +26,7 @@ CollisionCounter::CollisionCounter(rclcpp::Node::SharedPtr & node) : node_{node}
   using std::placeholders::_1;
   using namespace std::chrono_literals;
 
-  pub_ = node_->create_publisher<FloatMsg>("collisions_count", 1);
+  pub_ = node_->create_publisher<FloatMsg>("~/collisions_count", 1);
   sub_ = node_->create_subscription<ContactsState>(
     "obstacle_collisions", 1, std::bind(&CollisionCounter::collision_callback_, this, _1));
 

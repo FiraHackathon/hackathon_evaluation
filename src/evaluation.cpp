@@ -33,7 +33,8 @@ Evaluation::Evaluation(const rclcpp::NodeOptions & options)
 : node_(std::make_shared<rclcpp::Node>("evaluation", options)),
   crops_viewer_(*node_),
   info_viewer_(*node_),
-  collision_counter_(node_)
+  collision_counter_(node_),
+  geofence_checker_(node_)
 {
   // Use world parser to get transform of each model
   node_->declare_parameter<std::string>("world_file");

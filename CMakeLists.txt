@@ -34,6 +34,7 @@ add_library(${PROJECT_NAME} SHARED
   src/crops_viewer.cpp
   src/info_viewer.cpp
   src/collision_counter.cpp
+  src/geofence_checker.cpp
 )
 
 add_executable(field_coverage_node

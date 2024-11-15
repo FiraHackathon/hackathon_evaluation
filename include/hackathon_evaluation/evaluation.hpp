@@ -25,6 +25,7 @@
 #include <unordered_map>
 
 #include "hackathon_evaluation/collision_counter.hpp"
+#include "hackathon_evaluation/geofence_checker.hpp"
 #include "hackathon_evaluation/crop_field.hpp"
 #include "hackathon_evaluation/crops_viewer.hpp"
 #include "hackathon_evaluation/info_viewer.hpp"
@@ -69,6 +70,7 @@ private:
   CropsViewer crops_viewer_;
   InfoViewer info_viewer_;
   CollisionCounter collision_counter_;
+  GeofenceChecker geofence_checker_;
 };
 
 }  // namespace hackathon

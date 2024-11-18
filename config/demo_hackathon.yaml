@@ -11,6 +11,9 @@
     joint_state_topic: /robot/implement/joint_states
     implement_pose_topic: /evaluation/robot/implement_pose
 
+    tool_is_outside_period: 3.0  # seconds
+    field_headland: 5.0  # meters
+
     field_names:
       - "mixed_field"
       - "sloping_field"

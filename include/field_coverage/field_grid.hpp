@@ -6,7 +6,6 @@
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
-#include <iostream>
 #include <vector>
 
 namespace bg = boost::geometry;
@@ -27,9 +26,10 @@ namespace hackathon
   public:
     FieldGrid(std::string name, double x, double y, double z,
               double roll, double pitch, double yaw,
-              double width, double height, double resolution);
+              double width, double height, double resolution, double headland);
 
-    void collisionCallback(Eigen::Vector3d corner1,
+    /// Update intersected cells and return true if centroid is inside the extended field
+    bool collisionCallback(Eigen::Vector3d corner1,
                            Eigen::Vector3d corner2,
                            Eigen::Vector3d corner3,
                            Eigen::Vector3d corner4);
@@ -46,6 +46,7 @@ namespace hackathon
     int                   n_rows_, n_cols_;
     std::vector<GridCell> cells_;
     Eigen::Affine3d       world_to_field_;
+    Box                   full_area_;
   };
 } // namespace hackathon
 

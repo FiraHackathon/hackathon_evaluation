@@ -1,14 +1,16 @@
 #include "field_coverage/field_grid.hpp"
+#include <boost/geometry/algorithms/centroid.hpp>
+#include <boost/geometry/algorithms/detail/intersects/interface.hpp>
 #include <cmath>
 
 namespace hackathon
 {
   FieldGrid::FieldGrid(std::string name, double x, double y, double z,
                        double roll, double pitch, double yaw,
-                       double width, double height, double resolution) :
-
-                                                                         name_(name),
-                                                                         intersected_cells_(0)
+                       double width, double height, double resolution, double headland) :
+    name_(name),
+    intersected_cells_(0),
+    full_area_({-headland, -headland}, {width + headland, height + headland})
   {
     world_pos_ = Eigen::Vector3d(x, y, z);
 
@@ -41,7 +43,7 @@ namespace hackathon
     }
   }
 
-  void FieldGrid::collisionCallback(Eigen::Vector3d corner1,
+  bool FieldGrid::collisionCallback(Eigen::Vector3d corner1,
                                     Eigen::Vector3d corner2,
                                     Eigen::Vector3d corner3,
                                     Eigen::Vector3d corner4)
@@ -56,8 +58,14 @@ namespace hackathon
                              {corner3.x(), corner3.y()},
                              {corner4.x(), corner4.y()},
                              {corner1.x(), corner1.y()}}};
+    Point tool_centroid;
+    bg::centroid(tool_foot_print, tool_centroid);
 
-    checkIntersections(tool_foot_print);
+    if (bg::intersects(tool_centroid, full_area_)) {
+      checkIntersections(tool_foot_print);
+      return true;
+    }
+    return false;
   }
 
   void FieldGrid::checkIntersections(const Polygon &collision_polygon)

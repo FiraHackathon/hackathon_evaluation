@@ -1,10 +1,12 @@
 #include "field_coverage/field_coverage.hpp"
 #include <Eigen/Core>
 #include <rclcpp/logging.hpp>
+#include <rclcpp/time.hpp>
 
 namespace hackathon
 {
-  FieldCoverage::FieldCoverage(const rclcpp::NodeOptions &options) : Node("field_coverage_node", options)
+  FieldCoverage::FieldCoverage(const rclcpp::NodeOptions &options):
+    Node("field_coverage_node", options), last_update_time_(now())
   {
     tool_length_          = this->get_parameter("tool_length").as_double();
     tool_width_           = this->get_parameter("tool_width").as_double();
@@ -17,6 +19,8 @@ namespace hackathon
     std::string              joint_state_topic = this->get_parameter("joint_state_topic").as_string();
     std::vector<std::string> fields_names = this->get_parameter("field_names").as_string_array();
     std::string              pose_topic = get_parameter("implement_pose_topic").as_string();
+    tool_outside_period_ = Seconds(this->get_parameter("tool_is_outside_period").as_double());
+    double headland = this->get_parameter("field_headland").as_double();
 
     for (const auto &field_name : fields_names)
     {
@@ -32,11 +36,11 @@ namespace hackathon
       double height     = this->get_parameter("fields." + field_name + ".height").as_double();
       double resolution = this->get_parameter("fields." + field_name + ".resolution").as_double();
 
-      fields_.push_back(FieldGrid(field_name, x, y, z, roll, pitch, yaw, width, height, resolution));
+      fields_.push_back(
+        FieldGrid(field_name, x, y, z, roll, pitch, yaw, width, height, resolution, headland));
 
-      rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr field_pub =
-          this->create_publisher<std_msgs::msg::Float32>(field_name + "/coverage", 10);
-      coverage_pubs_.push_back(field_pub);
+      auto field_pub = this->create_publisher<FloatMsg>(field_name + "/coverage", 10);
+      coverage_pubs_.push_back(std::move(field_pub));
     }
 
     using std::placeholders::_1;
@@ -47,6 +51,8 @@ namespace hackathon
 
     pose_sub_ = create_subscription<PoseMsg>(
       pose_topic, 1, std::bind(&FieldCoverage::implementCallback_, this, _1));
+
+    outside_pub_ = create_publisher<FloatMsg>("~/implement_down_outside", 1);
 
     RCLCPP_INFO(this->get_logger(), "Initialization complete");
   }
@@ -79,7 +85,11 @@ namespace hackathon
 
       Eigen::Vector3d up_right, up_left, bottom_left, bottom_right;
       getToolCorners(up_right, up_left, bottom_left, bottom_right);
-      field->collisionCallback(up_left, up_right, bottom_left, bottom_right);
+      bool is_inside = field->collisionCallback(up_left, up_right, bottom_left, bottom_right);
+
+      if(!is_inside) {
+        updateOutsideCounter_();
+      }
     }
 
     for (size_t i = 0; i < fields_.size(); i++)
@@ -118,5 +128,24 @@ namespace hackathon
     const auto & q = msg.pose.orientation;
     tool_to_world_.translation() = Eigen::Vector3d{pos.x, pos.y, pos.z};
     tool_to_world_.linear() = Eigen::Quaterniond{q.w, q.x, q.y, q.z}.toRotationMatrix();
+  }
+
+  void FieldCoverage::updateOutsideCounter_()
+  {
+    rclcpp::Time time = now();
+
+    if((time - last_update_time_) < tool_outside_period_) {
+      return;
+    }
+
+    ++tool_outside_counter_;
+    last_update_time_ = time;
+
+    FloatMsg out;
+    out.data = tool_outside_counter_;
+    outside_pub_->publish(out);
+
+    RCLCPP_INFO_STREAM(
+      get_logger(), "implement is down outside the fields: " << tool_outside_counter_);
   }
 }  // namespace hackathon

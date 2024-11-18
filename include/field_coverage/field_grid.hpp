@@ -47,6 +47,7 @@ namespace hackathon
     std::vector<GridCell> cells_;
     Eigen::Affine3d       world_to_field_;
     Box                   full_area_;
+    double                field_headland_;
   };
 } // namespace hackathon
 

@@ -1,7 +1,11 @@
 #include "field_coverage/field_grid.hpp"
 #include <boost/geometry/algorithms/centroid.hpp>
+#include <boost/geometry/algorithms/detail/distance/interface.hpp>
 #include <boost/geometry/algorithms/detail/intersects/interface.hpp>
+#include <boost/geometry/algorithms/detail/within/interface.hpp>
 #include <cmath>
+#include <rclcpp/logger.hpp>
+#include <rclcpp/logging.hpp>
 
 namespace hackathon
 {
@@ -10,7 +14,8 @@ namespace hackathon
                        double width, double height, double resolution, double headland) :
     name_(name),
     intersected_cells_(0),
-    full_area_({-headland, -headland}, {width + headland, height + headland})
+    full_area_({0, 0}, {width, height}),
+    field_headland_(headland)
   {
     world_pos_ = Eigen::Vector3d(x, y, z);
 
@@ -58,10 +63,17 @@ namespace hackathon
                              {corner3.x(), corner3.y()},
                              {corner4.x(), corner4.y()},
                              {corner1.x(), corner1.y()}}};
+
     Point tool_centroid;
     bg::centroid(tool_foot_print, tool_centroid);
+    double distance = bg::distance(full_area_, tool_centroid);
 
-    if (bg::intersects(tool_centroid, full_area_)) {
+    // TODO: remote it. Temporary fix for a strange bug
+    if(distance > 1e8) {
+      distance = 0;
+    }
+
+    if (distance < field_headland_) {
       checkIntersections(tool_foot_print);
       return true;
     }

@@ -6,7 +6,6 @@ namespace hackathon
 
 GeofenceChecker::GeofenceChecker(rclcpp::Node::SharedPtr & node) : node_{node}
 {
-  RCLCPP_WARN(node_->get_logger(), "\n\nINIT\n\n");
   using std::placeholders::_1;
   using namespace std::chrono_literals;
 
@@ -19,7 +18,6 @@ GeofenceChecker::GeofenceChecker(rclcpp::Node::SharedPtr & node) : node_{node}
     "robot/robot_pose", 1, std::bind(&GeofenceChecker::pose_callback_, this, _1));
 
   last_exit_time = node_->now();
-  RCLCPP_WARN(node_->get_logger(), "\n\nINIT\n\n");
 }
 
 void GeofenceChecker::pose_callback_(const PoseStamped &robot_pose)

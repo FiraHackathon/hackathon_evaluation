@@ -27,7 +27,7 @@ void GeofenceChecker::pose_callback_(const PoseStamped &robot_pose)
   using namespace std::chrono_literals;
 
   Point robot_position {robot_pose.pose.position.x, robot_pose.pose.position.y};
-  if (!bg::within(robot_position, geofence_)) {
+  if (bg::within(robot_position, geofence_)) {
     return;
   }
 

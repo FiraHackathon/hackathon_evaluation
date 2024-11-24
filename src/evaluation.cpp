@@ -64,7 +64,7 @@ void Evaluation::init_field_(const std::string & field_name, const Eigen::Affine
   std::string coverage_topic_name = field_name + "/coverage";
   std::string crushed_topic_name = field_name + "/crushed";
 
-  fields_.insert({field_name, FieldInterface{}});
+  fields_.emplace(field_name, FieldInterface{});
   FieldInterface & field = fields_[field_name];
   field.name = field_name;
 
@@ -108,8 +108,8 @@ void Evaluation::collision_callback_(FieldInterface & field, const ContactsState
       info_viewer_.set_crushed_percentage(field.name, crushed_percentage);
 
       Float32Msg msg;
-      msg.data = crushed_percentage;
-      field.crushed_pub->publish(std::move(msg));
+      msg.data = static_cast<float>(crushed_percentage);
+      field.crushed_pub->publish(msg);
     }
   }
 }

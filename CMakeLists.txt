@@ -13,6 +13,17 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# Prevent compiling nanflann targets
+set(NANOFLANN_BUILD_EXAMPLES OFF CACHE BOOL "Disable building examples" FORCE)
+set(NANOFLANN_BUILD_TESTS OFF CACHE BOOL "Disable building tests" FORCE)
+
+include(FetchContent)
+FetchContent_Declare(nanoflann
+  GIT_REPOSITORY https://github.com/jlblancoc/nanoflann.git
+  GIT_TAG        master
+)
+FetchContent_MakeAvailable(nanoflann)
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -54,6 +65,7 @@ target_include_directories(field_coverage_node PUBLIC
 )
 
 # Remove annoying warning of boost
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DBOOST_ALLOW_DEPRECATED_HEADERS)
 target_compile_definitions(field_coverage_node PRIVATE -DBOOST_ALLOW_DEPRECATED_HEADERS)
 
 ament_target_dependencies(${PROJECT_NAME}
@@ -76,6 +88,7 @@ ament_target_dependencies(field_coverage_node
 target_link_libraries(${PROJECT_NAME}
   Eigen3::Eigen
   tinyxml2::tinyxml2
+  nanoflann::nanoflann
 )
 
 target_link_libraries(field_coverage_node

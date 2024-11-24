@@ -15,9 +15,10 @@
 #include "hackathon_evaluation/crop_field.hpp"
 
 #include <fstream>
-#include <limits>
+#include <memory>
 #include <rclcpp/logger.hpp>
 #include <rclcpp/logging.hpp>
+#include "nanoflann.hpp"
 
 namespace hackathon
 {
@@ -38,34 +39,19 @@ Points to_eigen_vectors(const ContactPoints & points)
   return res;
 }
 
-Crop * get_nearest_crop(const CropField::Neighbors & crops, Eigen::Vector3d point)
-{
-  double current_dist = std::numeric_limits<double>::infinity();
-  Crop * current_crop = nullptr;
-
-  for (const auto & crop : crops) {
-    double dist = (point - crop->pos).squaredNorm();
-    if (dist < current_dist) {
-      current_dist = dist;
-      current_crop = crop;
-    }
-  }
-
-  return current_crop;
-}
-
 }  // namespace
 
-std::size_t CropField::load_csv(const std::string & filename, Eigen::Affine3d const & transform)
+std::size_t CropField::load_csv(const std::string & filename, const Eigen::Affine3d & transform)
 {
   constexpr auto separator = ',';
+  auto & crops = dataset_.crops;
   std::ifstream file(filename);
 
   if (!file.is_open()) {
     throw std::runtime_error("failed to open CSV data file");
   }
 
-  crops_.clear();
+  crops.clear();
 
   std::string line;
 
@@ -87,7 +73,7 @@ std::size_t CropField::load_csv(const std::string & filename, Eigen::Affine3d co
 
     try {
       Eigen::Vector3d point{std::stod(x), std::stod(y), std::stod(z)};
-      crops_.emplace_back(transform * point);
+      crops.emplace_back(transform * point);
     } catch (const std::exception &) {
       throw std::runtime_error("malformed number in " + filename + ", line " + std::to_string(i));
     }
@@ -99,27 +85,27 @@ std::size_t CropField::load_csv(const std::string & filename, Eigen::Affine3d co
     ++i;
   }
 
-  file.close();  // Close the file
+  file.close();
 
-  return crops_.size();
+  kdtree_ = std::make_unique<KdTree>(2, dataset_);
+  kdtree_->buildIndex();
+
+  return crops.size();
 }
 
 bool CropField::crush_around(const ContactState & state)
 {
-  constexpr double neighbor_radius = 0.5;
-
   if (state.contact_positions.empty()) {
     return false;
   }
 
   // Get nearest crops to avoid iterate all crops for each contact points
   Points points = to_eigen_vectors(state.contact_positions);
-  auto neighbors = get_neighborhood_(points.front(), neighbor_radius);
   bool crushed = false;
 
   for (const auto & point : points) {
-    Crop * closest_crop = get_nearest_crop(neighbors, point);
-    if(closest_crop != nullptr && !closest_crop->crushed) {
+    Crop * closest_crop = get_nearest_crop(point);
+    if (closest_crop != nullptr && !closest_crop->crushed) {
       closest_crop->crushed = true;
       ++nb_crushed_;
       crushed = true;
@@ -129,23 +115,20 @@ bool CropField::crush_around(const ContactState & state)
   return crushed;
 }
 
-CropField::Neighbors CropField::get_neighborhood_(Eigen::Vector3d pos, double radius)
-{
-  double sq_radius = radius * radius;
-  CropField::Neighbors neighbors;
-
-  for (auto & crop : crops_) {
-    if ((pos - crop.pos).squaredNorm() < sq_radius) {
-      neighbors.push_back(&crop);
-    }
-  }
-
-  return neighbors;
-}
-
 double CropField::get_crushed_ratio() const
 {
-  return static_cast<double>(nb_crushed_) / crops_.size();
+  return static_cast<double>(nb_crushed_) / static_cast<double>(dataset_.crops.size());
+}
+
+Crop * CropField::get_nearest_crop(const Eigen::Vector3d & point)
+{
+  std::size_t index{};
+  double distance{};
+  nanoflann::KNNResultSet<double> result{1};
+  result.init(&index, &distance);
+
+  kdtree_->findNeighbors(result, point.data());
+  return result.size() ? &dataset_.crops[index] : nullptr;
 }
 
 }  // namespace hackathon

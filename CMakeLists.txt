@@ -75,6 +75,7 @@ ament_target_dependencies(${PROJECT_NAME}
   std_msgs
   visualization_msgs
   rviz_2d_overlay_msgs
+  tf2_ros
 )
 
 ament_target_dependencies(field_coverage_node

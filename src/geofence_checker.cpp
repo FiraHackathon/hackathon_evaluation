@@ -4,7 +4,10 @@
 namespace hackathon
 {
 
-GeofenceChecker::GeofenceChecker(rclcpp::Node::SharedPtr & node) : node_{node}
+GeofenceChecker::GeofenceChecker(rclcpp::Node::SharedPtr &node) : 
+node_{node},
+tf_buffer_{node_->get_clock()},
+tf_listener_{tf_buffer_}
 {
   using std::placeholders::_1;
   using namespace std::chrono_literals;
@@ -15,9 +18,49 @@ GeofenceChecker::GeofenceChecker(rclcpp::Node::SharedPtr & node) : node_{node}
 
   pub_ = node_->create_publisher<FloatMsg>("~/safe_zone_exits_count", 1);
   sub_ = node_->create_subscription<PoseStamped>(
-    "robot/robot_pose", 1, std::bind(&GeofenceChecker::pose_callback_, this, _1));
+      "robot/robot_pose", 1, std::bind(&GeofenceChecker::pose_callback_, this, _1));
+
+  timer_ = node_->create_wall_timer(1s, std::bind(&GeofenceChecker::timer_callback_, this));
+  markers_pub_ = node_->create_publisher<Markers>("~/geofence_markers", 1);
 
   last_exit_time = node_->now();
+}
+
+void GeofenceChecker::timer_callback_()
+{
+  if (geofence_.outer().empty() || !tf_buffer_._frameExists("map"))
+  {
+    return;
+  }
+
+  Markers msg;
+  Marker  marker;
+
+  marker.header.frame_id = "map";
+  // marker.header.stamp = node_->now();
+
+  marker.ns = "geofence_markers";
+  marker.id = ++m_count_;
+  marker.action = Marker::ADD;
+  marker.type = Marker::LINE_STRIP;
+  marker.frame_locked = true;
+
+  marker.color.a = 1;
+  marker.color.r = 1;
+
+  marker.scale.x = 1;
+
+  for (const auto point : geofence_.outer())
+  {
+    geometry_msgs::msg::Point position;
+    position.x = point.get<0>();
+    position.y = point.get<1>();
+    position.z = 0;
+    marker.points.push_back(position);
+  }
+
+  msg.markers.push_back(marker);
+  markers_pub_->publish(msg);
 }
 
 void GeofenceChecker::pose_callback_(const PoseStamped &robot_pose)
